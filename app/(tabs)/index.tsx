@@ -2,10 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Button, StyleSheet, TouchableOpacity, TextInput, Picker } from 'react-native';
 
 const AttendanceSystem = () => {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [signingUp, setSigningUp] = useState(false);
+  const [newUsername, setNewUsername] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [classes, setClasses] = useState([
-    { id: 1, name: 'FE3', students: [{ name: 'Dugs', section: 'BSIT301', time: '', date: '', present: false }, { name: 'Pastor', section: 'BSIT301', time: '', date: '', present: false }] },
-    { id: 2, name: 'PMQA', students: [{ name: 'Gar', section: 'BSIT302', time: '', date: '', present: false }, { name: 'Ka-foodie', section: 'BSIT302', time: '', date: '', present: false }] },
-    { id: 3, name: 'CAPSTONE', students: [{ name: 'Vector', section: 'BSIT301', time: '', date: '', present: false }, { name: 'SirBugay', section: 'BSIT301', time: '', date: '', present: false }] },
+    {
+      id: 1,
+      name: 'FE3',
+      students: [
+        { id: 1, name: 'Dugs', section: 'BSIT301', time: '', date: '', present: false },
+        { id: 2, name: 'Pastor', section: 'BSIT301', time: '', date: '', present: false }
+      ]
+    },
+    {
+      id: 2,
+      name: 'PMQA',
+      students: [
+        { id: 3, name: 'Gar', section: 'BSIT302', time: '', date: '', present: false },
+        { id: 4, name: 'Ka-foodie', section: 'BSIT302', time: '', date: '', present: false }
+      ]
+    },
+    {
+      id: 3,
+      name: 'CAPSTONE',
+      students: [
+        { id: 5, name: 'Vector', section: 'BSIT301', time: '', date: '', present: false },
+        { id: 6, name: 'SirBugay', section: 'BSIT301', time: '', date: '', present: false }
+      ]
+    },
   ]);
   const [currentClass, setCurrentClass] = useState(null);
   const [newClassName, setNewClassName] = useState('');
@@ -30,10 +58,13 @@ const AttendanceSystem = () => {
     return () => clearInterval(interval);
   }, [classes]);
 
-  const toggleAttendance = (classIndex, studentIndex) => {
+  const toggleAttendance = (classIndex, studentId) => {
     const updatedClasses = [...classes];
-    updatedClasses[classIndex].students[studentIndex].present = !updatedClasses[classIndex].students[studentIndex].present;
-    setClasses(updatedClasses);
+    const studentIndex = updatedClasses[classIndex].students.findIndex(student => student.id === studentId);
+    if (studentIndex !== -1) {
+      updatedClasses[classIndex].students[studentIndex].present = !updatedClasses[classIndex].students[studentIndex].present;
+      setClasses(updatedClasses);
+    }
   };
 
   const addClass = () => {
@@ -58,7 +89,8 @@ const AttendanceSystem = () => {
   };
 
   const confirmAddStudent = (classIndex) => {
-    const newStudent = { name: tempStudentName, section: 'BSIT301', time: '', date: '', present: false };
+    const newStudentId = classes[classIndex].students.length > 0 ? classes[classIndex].students[classes[classIndex].students.length - 1].id + 1 : 1;
+    const newStudent = { id: newStudentId, name: tempStudentName, section: 'BSIT301', time: '', date: '', present: false };
     const updatedClasses = [...classes];
     updatedClasses[classIndex].students.push(newStudent);
     setClasses(updatedClasses);
@@ -66,9 +98,9 @@ const AttendanceSystem = () => {
     setTempStudentName('');
   };
 
-  const removeStudent = (classIndex, studentIndex) => {
+  const removeStudent = (classIndex, studentId) => {
     const updatedClasses = [...classes];
-    updatedClasses[classIndex].students = updatedClasses[classIndex].students.filter((_, index) => index !== studentIndex);
+    updatedClasses[classIndex].students = updatedClasses[classIndex].students.filter(student => student.id !== studentId);
     setClasses(updatedClasses);
   };
 
@@ -80,6 +112,43 @@ const AttendanceSystem = () => {
     return `Present: ${presentCount}/${totalStudents}`;
   };
 
+  const handleLogin = () => {
+    // Simulate authentication (replace with actual authentication logic)
+    if (username === 'admin' && password === 'admin') {
+      setLoggedIn(true);
+    } else {
+      alert('Invalid credentials. Please try again.');
+    }
+  };
+
+  const handleSignUp = () => {
+    // Simulate signup process (replace with actual signup logic)
+    if (newUsername.trim() === '' || newPassword.trim() === '' || confirmPassword.trim() === '') {
+      alert('Please fill in all fields.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert('Passwords do not match. Please try again.');
+      return;
+    }
+    setUsername(newUsername); // Automatically login with new credentials after signing up
+    setPassword(newPassword);
+    setSigningUp(false);
+    setLoggedIn(true); // Directly login after successful signup (simulated)
+    alert('Sign up successful!');
+  };
+
+  const handleLogout = () => {
+    // Perform logout action
+    setLoggedIn(false);
+    setUsername('');
+    setPassword('');
+  };
+
+  const handleSignUpToggle = () => {
+    setSigningUp(true);
+  };
+
   // Function to filter classes based on search text
   const filteredClasses = classes.filter(cls =>
     cls.name.toLowerCase().includes(searchText.toLowerCase())
@@ -89,6 +158,61 @@ const AttendanceSystem = () => {
   const filteredStudents = currentClass !== null ? classes[currentClass].students.filter(student =>
     student.name.toLowerCase().includes(searchText.toLowerCase())
   ) : [];
+
+  if (!loggedIn && !signingUp) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Login</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          value={username}
+          onChangeText={setUsername}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+        <Button title="Login" onPress={handleLogin} />
+        <TouchableOpacity style={styles.linkButton} onPress={handleSignUpToggle}>
+          <Text style={styles.linkText}>Sign Up</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  } else if (!loggedIn && signingUp) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Sign Up</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="New Username"
+          value={newUsername}
+          onChangeText={setNewUsername}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="New Password"
+          secureTextEntry
+          value={newPassword}
+          onChangeText={setNewPassword}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Confirm Password"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
+        <Button title="Sign Up" onPress={handleSignUp} />
+        <TouchableOpacity style={styles.linkButton} onPress={() => setSigningUp(false)}>
+          <Text style={styles.linkText}>Back to Login</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -106,23 +230,29 @@ const AttendanceSystem = () => {
             <Text style={styles.subtitle}>Students</Text>
             {/* Display filtered students */}
             {filteredStudents.map((student, index) => (
-              <View key={index} style={styles.studentItem}>
+              <View key={student.id} style={styles.studentItem}>
                 <TextInput
                   style={[styles.input, styles.studentNameInput]}
                   value={student.name}
                   onChangeText={(text) => {
                     const updatedClasses = [...classes];
-                    updatedClasses[currentClass].students[index].name = text;
-                    setClasses(updatedClasses);
+                    const studentIndex = updatedClasses[currentClass].students.findIndex(s => s.id === student.id);
+                    if (studentIndex !== -1) {
+                      updatedClasses[currentClass].students[studentIndex].name = text;
+                      setClasses(updatedClasses);
+                    }
                   }}
                 />
                 <Picker
                   selectedValue={student.section}
-                  style={{ height: 50, width: 150 }}
-                  onValueChange={(itemValue, itemIndex) => {
+                  style={{ height: 50, width: 100 }}
+                  onValueChange={(itemValue) => {
                     const updatedClasses = [...classes];
-                    updatedClasses[currentClass].students[index].section = itemValue;
-                    setClasses(updatedClasses);
+                    const studentIndex = updatedClasses[currentClass].students.findIndex(s => s.id === student.id);
+                    if (studentIndex !== -1) {
+                      updatedClasses[currentClass].students[studentIndex].section = itemValue;
+                      setClasses(updatedClasses);
+                    }
                   }}
                 >
                   <Picker.Item label="BSIT301" value="BSIT301" />
@@ -131,13 +261,13 @@ const AttendanceSystem = () => {
                 <Text style={styles.timeDate}>{student.time === '' ? 'Waiting...' : `${student.time} - ${student.date}`}</Text>
                 <TouchableOpacity
                   style={student.present ? styles.presentButton : styles.absentButton}
-                  onPress={() => toggleAttendance(currentClass, index)}
+                  onPress={() => toggleAttendance(currentClass, student.id)}
                 >
                   <Text style={styles.buttonText}>{student.present ? 'Present' : 'Absent'}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.removeButton}
-                  onPress={() => removeStudent(currentClass, index)}
+                  onPress={() => removeStudent(currentClass, student.id)}
                 >
                   <Text style={styles.buttonText}>Remove</Text>
                 </TouchableOpacity>
@@ -187,7 +317,7 @@ const AttendanceSystem = () => {
           <View style={styles.classList}>
             {/* Display filtered classes */}
             {filteredClasses.map((cls, index) => (
-              <TouchableOpacity key={index} style={styles.classItem} onPress={() => setCurrentClass(index)}>
+              <TouchableOpacity key={cls.id} style={styles.classItem} onPress={() => setCurrentClass(index)}>
                 <Text style={styles.classText}>{cls.name}</Text>
                 <TouchableOpacity style={styles.removeButton} onPress={() => removeClass(index)}>
                   <Text style={styles.buttonText}>Remove</Text>
@@ -208,6 +338,10 @@ const AttendanceSystem = () => {
           </View>
         </>
       )}
+      {/* Logout button */}
+      <View style={styles.buttonContainer}>
+        <Button title="Logout" onPress={handleLogout} />
+      </View>
     </View>
   );
 };
@@ -217,7 +351,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
   },
   title: {
     fontSize: 24,
@@ -274,19 +408,20 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
+    width: '80%',
     borderColor: '#ccc',
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
+    marginBottom: 10,
     color: '#333',
   },
   addClassInput: {
     flex: 1,
     marginRight: 10,
-    
   },
   studentContainer: {
-    width: '50%',
+    width: '80%',
     marginBottom: 20,
   },
   subtitle: {
@@ -332,7 +467,16 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   searchInput: {
+    width: '80%',
+    marginBottom: 10,
+  },
+  linkButton: {
     marginTop: 10,
+  },
+  linkText: {
+    color: 'blue',
+    fontSize: 16,
+    textDecorationLine: 'underline',
   },
 });
 
